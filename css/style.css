@@ -1,0 +1,266 @@
+/* ライトテーマの配色
+   面の色は外側から順に: 背景 → 全体パネル → 入力/出力パネル → 項目枠 → 入力欄 */
+:root {
+  --bg: #e9edf2;        /* ページ背景 */
+  --surface-1: #ffffff; /* 全体パネル(ヘッダー含む) */
+  --surface-2: #f4f6f9; /* 入力・出力パネル */
+  --surface-3: #ffffff; /* 項目枠(fieldset) */
+  --field: #ffffff;     /* 入力欄・出力欄 */
+  --step: #eef1f5;      /* -1/+1ボタン */
+  --shadow: 0 2px 10px rgba(20, 30, 50, 0.06);
+  --text: #1d2330;
+  --muted: #5c6577;
+  --border: #d4d8e0;
+  --accent: #2f6fde;
+  --accent-text: #ffffff;
+  --error: #c62828;
+  --ok: #2e7d32;
+}
+
+/* ダークテーマの配色 */
+:root[data-theme="dark"] {
+  --bg: #0f1115;        /* ページ背景 */
+  --surface-1: #181b21; /* 全体パネル(ヘッダー含む) */
+  --surface-2: #1f232b; /* 入力・出力パネル */
+  --surface-3: #262b35; /* 項目枠(fieldset) */
+  --field: #15181e;     /* 入力欄・出力欄(一段沈めて見せる) */
+  --step: #2e3440;      /* -1/+1ボタン */
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  --text: #e4e7ee;
+  --muted: #9aa3b5;
+  --border: #363c48;
+  --accent: #5b8ff0;
+  --accent-text: #0e1116;
+  --error: #ef6b6b;
+  --ok: #6fcf75;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+  padding: 16px;
+}
+
+/* 画面全体をまとめるパネル */
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-1);
+  box-shadow: var(--shadow);
+}
+
+/* ヘッダー */
+/* 3列構成にしてタイトルを中央、テーマボタンを右端に配置 */
+.header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.header .title { grid-column: 2; text-align: center; }
+.header h1 { margin: 0; font-size: 1.3rem; }
+/* タイトル下の説明文 */
+.subtitle { margin: 0; font-size: 0.85rem; color: var(--muted); }
+.header #themeToggle { justify-self: end; }
+
+/* メイン領域(入力と出力を横並び) */
+.main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px;
+}
+@media (max-width: 760px) {
+  .main { grid-template-columns: minmax(0, 1fr); }
+  /* スマホでは外側の余白を詰める */
+  body { padding: 8px; }
+}
+
+/* 入力・出力をそれぞれ1つのパネルにまとめる */
+.form,
+.output {
+  padding: 12px 16px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+/* 入力フォーム */
+fieldset {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-3);
+}
+legend { font-weight: bold; padding: 0 4px; }
+label {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+.row { display: flex; gap: 8px; }
+/* 行内の項目を縮められるようにする */
+.row label { min-width: 0; }
+/* -1/+1ボタン付き入力欄 */
+.stepper {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+.stepper input { margin-top: 0; min-width: 0; }
+.step {
+  flex: none;
+  width: 30px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--step);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.step:hover { border-color: var(--accent); color: var(--accent); }
+
+/* プリフィックス欄は広めに取る */
+.row label.wide { flex: 2; }
+.hint { margin: 0; font-size: 0.8rem; color: var(--muted); }
+
+input, textarea {
+  margin-top: 4px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--field);
+  color: var(--text);
+  font: inherit;
+  width: 100%;
+}
+textarea {
+  font-family: ui-monospace, Consolas, monospace;
+  resize: vertical;
+  min-height: 200px;
+}
+
+/* ボタン */
+.btn {
+  padding: 8px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font: inherit;
+  cursor: pointer;
+}
+.btn-sub {
+  background: transparent;
+  color: var(--accent);
+}
+
+/* アイコンボタン(テーマ切り替え) */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+}
+/* アイコンのみのボタンは正方形に近い余白にする */
+.btn-icon-only { padding: 6px; }
+/* 出力パネルのコピーボタンは見出し行の右端に寄せる */
+#copyBtn { margin-left: auto; }
+.icon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* テーマに応じて表示するアイコンを切り替え */
+.icon-sun { display: none; }
+:root[data-theme="dark"] .icon-sun { display: block; }
+:root[data-theme="dark"] .icon-moon { display: none; }
+
+/* 入力パネル末尾の余白をなくし、出力欄と下端を揃える */
+.form fieldset:last-of-type { margin-bottom: 0; }
+
+/* フローティング通知(画面下中央) */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  max-width: calc(100% - 32px);
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--muted);
+  border-radius: 8px;
+  background: var(--surface-1);
+  color: var(--text);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  transform: translateX(-50%);
+  /* フェード時間(main.js の FADE_MS と揃えること) */
+  --toast-fade: 0.4s;
+  /* 非表示時: 透明にし、フェードアウト完了後に非表示扱いにする */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity var(--toast-fade) ease-in-out,
+    visibility 0s linear var(--toast-fade);
+}
+/* 表示時: すぐ表示扱いにしてからフェードイン */
+.toast.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    opacity var(--toast-fade) ease-in-out,
+    visibility 0s;
+}
+/* 種別ごとの左線の色 */
+.toast.ok { border-left-color: var(--ok); }
+.toast.error { border-left-color: var(--error); }
+
+/* 動きを減らす設定のときはトランジションを無効化 */
+@media (prefers-reduced-motion: reduce) {
+  .toast, .toast.show { transition: none; }
+}
+
+/* 出力領域 */
+/* 入力・出力パネル共通の見出し(ボタン有無に関わらず高さを揃える) */
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  margin-bottom: 4px;
+}
+.panel-head h2 { margin: 0; font-size: 1.1rem; }
+
+/* PC表示: 出力欄の高さを入力パネルに揃える */
+@media (min-width: 761px) {
+  /* 出力領域を縦並びにし、テキストエリアで残りの高さを埋める */
+  .output {
+    display: flex;
+    flex-direction: column;
+  }
+  /* テキストエリア自体は行の高さを広げず、入力パネルの高さに追従させる */
+  .output textarea {
+    flex: 1;
+    height: 0;
+    min-height: 0;
+    resize: none;
+  }
+}
