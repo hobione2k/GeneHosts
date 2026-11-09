@@ -9,6 +9,10 @@ const themeToggle = $('themeToggle');
 const copyBtn = $('copyBtn');
 
 const THEME_KEY = 'genhosts-theme';
+const INPUT_KEY = 'genhosts-input';
+
+// 保存・復元の対象とする入力欄
+const SAVE_IDS = ['ipPrefix', 'ipStart', 'ipEnd', 'hostPrefix', 'hostStart', 'hostEnd', 'hostDigits'];
 
 // 成功通知を自動で閉じるまでの時間(ミリ秒)
 const TOAST_MS = 3000;
@@ -174,8 +178,29 @@ function update(e) {
   }
 }
 
-// 入力値が変わるたびに出力を自動更新
-form.addEventListener('input', update);
+// 入力値をlocalStorageに保存
+function saveInputs() {
+  const data = {};
+  SAVE_IDS.forEach((id) => { data[id] = $(id).value; });
+  try { localStorage.setItem(INPUT_KEY, JSON.stringify(data)); } catch { /* 保存不可環境は無視 */ }
+}
+
+// 保存済みの入力値を復元(なければ初期値のまま)
+function restoreInputs() {
+  let data = null;
+  try { data = JSON.parse(localStorage.getItem(INPUT_KEY)); } catch { /* 読込不可・破損時は無視 */ }
+  if (!data || typeof data !== 'object') return;
+  SAVE_IDS.forEach((id) => {
+    if (typeof data[id] === 'string') $(id).value = data[id];
+  });
+}
+
+// 入力値が変わるたびに出力を自動更新し、入力値を保存
+// (件数合わせで書き換わった終了値も含めるため更新後に保存)
+form.addEventListener('input', (e) => {
+  update(e);
+  saveInputs();
+});
 
 // IPアドレス入力欄の値を±1する(プリフィックスを含めた全体で計算し繰り上げにも対応)
 function stepIp(id, delta) {
@@ -251,5 +276,6 @@ themeToggle.addEventListener('click', () => {
 
 initTheme();
 
-// 初期値で出力を生成
+// 前回の入力値を復元してから出力を生成
+restoreInputs();
 update();
