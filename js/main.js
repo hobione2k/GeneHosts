@@ -12,7 +12,7 @@ const THEME_KEY = 'genhosts-theme';
 const INPUT_KEY = 'genhosts-input';
 
 // 保存・復元の対象とする入力欄
-const SAVE_IDS = ['ipStart', 'ipEnd','hostPrefix', 'hostStart', 'hostEnd', 'hostDigits'];
+const SAVE_IDS = ['ipStart', 'ipEnd', 'hostPrefix', 'hostStart', 'hostEnd', 'hostDigits', 'hostMatchIp'];
 
 // 成功通知を自動で閉じるまでの時間(ミリ秒)
 const TOAST_MS = 3000;
@@ -119,9 +119,8 @@ function generate(priority) {
   const ipEndSuffix = $('ipEnd').value.trim();
   const ipEndStr = buildEndIp(ipStartStr, ipEndSuffix);
   const hostPrefix = $('hostPrefix').value.trim();
-  const hostStart = Number($('hostStart').value);
-  const hostEnd = Number($('hostEnd').value);
   const digits = Number($('hostDigits').value);
+  const matchIp = $('hostMatchIp').checked; // ホスト番号をIP末尾に合わせるか
 
   // IPアドレスの検証
   const ipStart = ipToInt(ipStartStr);
@@ -129,6 +128,17 @@ function generate(priority) {
   if (ipStart === null) throw new Error('開始IPアドレスが不正です: ' + ipStartStr);
   if (ipEnd === null) throw new Error('終了IPアドレスが不正です: ' + ipEndStr);
   if (ipStart > ipEnd) throw new Error('IPアドレスの開始が終了より大きいです');
+
+  // IP末尾に合わせる場合は、開始番号を開始IPの第4オクテットにし、件数はIP側を基準にする
+  const hostStart = matchIp ? ipStart % 256 : Number($('hostStart').value);
+  const hostEnd = matchIp ? hostStart + (ipEnd - ipStart) : Number($('hostEnd').value);
+  if (matchIp) {
+    priority = 'ip';
+    // 第3オクテットをまたぐと末尾の番号が重複するためエラー
+    if (Math.floor(ipStart / 256) !== Math.floor(ipEnd / 256)) {
+      throw new Error('IP末尾に合わせる場合は第4オクテットの範囲内で指定してください');
+    }
+  }
 
   // ホスト名の検証
   if (!/^[A-Za-z0-9.-]*$/.test(hostPrefix)) {
@@ -168,6 +178,7 @@ function generate(priority) {
   return {
     lines,
     ipEnd: toEndSuffix(ipStart, lastIp, ipEndSuffix), // 終了欄向けの末尾表記
+    hostStart: String(hostStart),
     hostEnd: String(lastHost),
   };
 }
@@ -188,6 +199,7 @@ function update(e) {
     output.value = lines.join('\n') + '\n';
     // 件数を揃えた結果を相手側の終了欄に反映
     syncInput('ipEnd', result.ipEnd, editingId);
+    syncInput('hostStart', result.hostStart, editingId); // IP末尾に合わせた場合の開始番号
     syncInput('hostEnd', result.hostEnd, editingId);
     // 入力のたびに通知が出ないよう、成功時はエラー通知を閉じるだけにする
     if (message.classList.contains('error')) hideMessage();
@@ -200,7 +212,11 @@ function update(e) {
 // 入力値をlocalStorageに保存
 function saveInputs() {
   const data = {};
-  SAVE_IDS.forEach((id) => { data[id] = $(id).value; });
+  // チェックボックスはオン/オフ、それ以外は入力値を保存
+  SAVE_IDS.forEach((id) => {
+    const el = $(id);
+    data[id] = el.type === 'checkbox' ? el.checked : el.value;
+  });
   try { localStorage.setItem(INPUT_KEY, JSON.stringify(data)); } catch { /* 保存不可環境は無視 */ }
 }
 
@@ -214,13 +230,26 @@ function restoreInputs() {
     data.ipStart = data.ipPrefix + data.ipStart;
   }
   SAVE_IDS.forEach((id) => {
-    if (typeof data[id] === 'string') $(id).value = data[id];
+    const el = $(id);
+    if (el.type === 'checkbox') {
+      if (typeof data[id] === 'boolean') el.checked = data[id];
+    } else if (typeof data[id] === 'string') {
+      el.value = data[id];
+    }
   });
+}
+
+// IP末尾に合わせる設定中は、ホストの開始・終了番号欄を編集不可にする
+function applyMatchIpState() {
+  const matchIp = $('hostMatchIp').checked;
+  $('hostStart').disabled = matchIp;
+  $('hostEnd').disabled = matchIp;
 }
 
 // 入力値が変わるたびに出力を自動更新し、入力値を保存
 // (件数合わせで書き換わった終了値も含めるため更新後に保存)
 form.addEventListener('input', (e) => {
+  applyMatchIpState();
   update(e);
   saveInputs();
 });
@@ -308,4 +337,5 @@ initTheme();
 
 // 前回の入力値を復元してから出力を生成
 restoreInputs();
+applyMatchIpState();
 update();

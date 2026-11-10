@@ -172,6 +172,22 @@ input, textarea {
   font: inherit;
   width: 100%;
 }
+/* 自動設定中で編集できない入力欄 */
+input:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* チェックボックス付きラベル(横並び・右寄せ) */
+label.check {
+  flex-direction: row;
+  align-items: center;
+  /* 幅を内容に合わせて右端へ寄せる(左側の余白クリックで切り替わらないように) */
+  width: fit-content;
+  margin-left: auto;
+  gap: 6px;
+  margin-bottom: 0;
+  cursor: pointer;
+}
+label.check input { width: auto; margin: 0; }
+
 textarea {
   font-family: ui-monospace, Consolas, monospace;
   resize: vertical;

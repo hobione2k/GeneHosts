@@ -81,6 +81,11 @@
             <input type="number" id="hostDigits" value="2" min="1" max="10">
           </label>
         </div>
+        <!-- オン時はホスト番号をIPアドレス末尾(第4オクテット)に合わせる(右寄せ) -->
+        <label class="check">
+          <input type="checkbox" id="hostMatchIp">
+          番号をIPアドレス末尾に合わせる
+        </label>
       </fieldset>
     </form>
 
