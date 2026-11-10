@@ -12,7 +12,7 @@ const THEME_KEY = 'genhosts-theme';
 const INPUT_KEY = 'genhosts-input';
 
 // 保存・復元の対象とする入力欄
-const SAVE_IDS = ['ipPrefix', 'ipStart', 'ipEnd', 'hostPrefix', 'hostStart', 'hostEnd', 'hostDigits'];
+const SAVE_IDS = ['ipStart', 'ipEnd','hostPrefix', 'hostStart', 'hostEnd', 'hostDigits'];
 
 // 成功通知を自動で閉じるまでの時間(ミリ秒)
 const TOAST_MS = 3000;
@@ -73,13 +73,37 @@ function intToIp(n) {
   return [24, 16, 8, 0].map((s) => Math.floor(n / 2 ** s) % 256).join('.');
 }
 
+// 開始IPの末尾オクテットを終了欄の値で置き換えて終了IPを組み立てる
+// 例: 「192.168.1.10」+「2.20」→「192.168.2.20」
+function buildEndIp(startStr, endSuffix) {
+  const startParts = startStr.split('.');
+  const endParts = endSuffix.split('.');
+  // 形式が合わない場合はそのまま返し、後段の検証でエラーにする
+  if (startParts.length !== 4 || endParts.length > 4) return endSuffix;
+  return [...startParts.slice(0, 4 - endParts.length), ...endParts].join('.');
+}
+
+// 終了IPを終了欄向けの末尾表記に変換
+// 開始IPと異なるオクテット数と、現在の表記のオクテット数の多い方で表す
+function toEndSuffix(startInt, endInt, currentSuffix) {
+  const s = intToIp(startInt).split('.');
+  const e = intToIp(endInt).split('.');
+  // 先頭から見て最初に異なるオクテット以降が必要な部分
+  let need = 1;
+  for (let i = 0; i < 4; i++) {
+    if (s[i] !== e[i]) { need = 4 - i; break; }
+  }
+  const keep = Math.min(4, Math.max(need, currentSuffix.split('.').length));
+  return e.slice(4 - keep).join('.');
+}
+
 // 数値を指定桁数で0埋め
 function zeroPad(num, digits) {
   return String(num).padStart(digits, '0');
 }
 
 // 入力欄IDから所属グループ(ip / host)を判定
-const IP_IDS = ['ipPrefix', 'ipStart', 'ipEnd'];
+const IP_IDS = ['ipStart', 'ipEnd'];
 const HOST_IDS = ['hostStart', 'hostEnd'];
 function groupOf(id) {
   if (IP_IDS.includes(id)) return 'ip';
@@ -91,9 +115,9 @@ function groupOf(id) {
 // priority: 件数の基準にするグループ(ip / host)。nullなら大きい方に合わせる
 // 戻り値: 生成行と、件数を揃えた後の各終了値
 function generate(priority) {
-  const ipPrefix = $('ipPrefix').value.trim();
-  const ipStartStr = ipPrefix + $('ipStart').value.trim();
-  const ipEndStr = ipPrefix + $('ipEnd').value.trim();
+  const ipStartStr = $('ipStart').value.trim();
+  const ipEndSuffix = $('ipEnd').value.trim();
+  const ipEndStr = buildEndIp(ipStartStr, ipEndSuffix);
   const hostPrefix = $('hostPrefix').value.trim();
   const hostStart = Number($('hostStart').value);
   const hostEnd = Number($('hostEnd').value);
@@ -131,11 +155,6 @@ function generate(priority) {
   if (lastIp > 0xFFFFFFFF) {
     throw new Error('IPアドレスがホスト件数分の範囲を超えます');
   }
-  // IP終了アドレスがプリフィックスの範囲内に収まるか確認(入力欄に戻せる形か)
-  const lastIpStr = intToIp(lastIp);
-  if (!lastIpStr.startsWith(ipPrefix)) {
-    throw new Error('IPアドレスがプリフィックスの範囲を超えます: ' + lastIpStr);
-  }
 
   // 揃えた後の終了番号の桁数と指定桁数のうち長い方で0埋めし、桁を揃える
   const lastHost = hostStart + count - 1;
@@ -148,7 +167,7 @@ function generate(priority) {
   }
   return {
     lines,
-    ipEnd: lastIpStr.slice(ipPrefix.length), // プリフィックスを除いた終了IP
+    ipEnd: toEndSuffix(ipStart, lastIp, ipEndSuffix), // 終了欄向けの末尾表記
     hostEnd: String(lastHost),
   };
 }
@@ -190,6 +209,10 @@ function restoreInputs() {
   let data = null;
   try { data = JSON.parse(localStorage.getItem(INPUT_KEY)); } catch { /* 読込不可・破損時は無視 */ }
   if (!data || typeof data !== 'object') return;
+  // 旧形式(プリフィックス+開始番号)の保存値は完全なIPに変換
+  if (typeof data.ipPrefix === 'string' && typeof data.ipStart === 'string') {
+    data.ipStart = data.ipPrefix + data.ipStart;
+  }
   SAVE_IDS.forEach((id) => {
     if (typeof data[id] === 'string') $(id).value = data[id];
   });
@@ -202,17 +225,24 @@ form.addEventListener('input', (e) => {
   saveInputs();
 });
 
-// IPアドレス入力欄の値を±1する(プリフィックスを含めた全体で計算し繰り上げにも対応)
+// IPアドレス入力欄の値を±1する(IP全体で計算し繰り上げにも対応)
 function stepIp(id, delta) {
   const el = $(id);
-  const prefix = $('ipPrefix').value.trim();
-  const current = ipToInt(prefix + el.value.trim());
+  const startStr = $('ipStart').value.trim();
+  // 開始IPはそのまま、終了は開始IPと組み合わせた完全なIPで計算
+  const fullStr = id === 'ipStart' ? startStr : buildEndIp(startStr, el.value.trim());
+  const current = ipToInt(fullStr);
   if (current === null) return; // 不正な値のときは何もしない
   const next = current + delta;
   if (next < 0 || next > 0xFFFFFFFF) return; // IPv4の範囲外は無視
-  const nextStr = intToIp(next);
-  if (!nextStr.startsWith(prefix)) return; // プリフィックスを超える変更は無視
-  el.value = nextStr.slice(prefix.length);
+  if (id === 'ipStart') {
+    el.value = intToIp(next);
+  } else {
+    // 終了欄は末尾表記に戻す(開始IPの不正時は何もしない)
+    const startInt = ipToInt(startStr);
+    if (startInt === null) return;
+    el.value = toEndSuffix(startInt, next, el.value.trim());
+  }
   // 手入力と同じく入力イベントを発火して出力・件数を更新
   el.dispatchEvent(new Event('input', { bubbles: true }));
 }

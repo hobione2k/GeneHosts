@@ -45,28 +45,22 @@
       <!-- IPアドレス指定 -->
       <fieldset>
         <legend>IPv4アドレス</legend>
-        <!-- プリフィックス・開始・終了を1行に配置 -->
+        <!-- 開始IP・終了を1行に配置 -->
         <div class="row">
-          <label class="wide">プリフィックス
-            <input type="text" id="ipPrefix" value="192.168.1." placeholder="192.168.1.">
+          <!-- 開始IPは完全なIPアドレスで指定(↑↓キーで増減可) -->
+          <label class="wide">開始IP
+            <input type="text" id="ipStart" value="192.168.0.1" placeholder="192.168.0.1">
           </label>
-          <!-- 開始・終了は-1/+1ボタン付き(↑↓キーでも増減可) -->
-          <label>開始
-            <span class="stepper">
-              <input type="text" id="ipStart" value="10" placeholder="10">
-              <button type="button" class="step" data-target="ipStart" data-step="-1" aria-label="開始を1減らす">−</button>
-              <button type="button" class="step" data-target="ipStart" data-step="1" aria-label="開始を1増やす">+</button>
-            </span>
-          </label>
+          <!-- 終了は開始IPの末尾を置き換える値。-1/+1ボタン付き(↑↓キーでも増減可) -->
           <label>終了
             <span class="stepper">
-              <input type="text" id="ipEnd" value="20" placeholder="20">
+              <input type="text" id="ipEnd" value="10" placeholder="10">
               <button type="button" class="step" data-target="ipEnd" data-step="-1" aria-label="終了を1減らす">−</button>
               <button type="button" class="step" data-target="ipEnd" data-step="1" aria-label="終了を1増やす">+</button>
             </span>
           </label>
         </div>
-        <p class="hint">例: プリフィックス「192.168.」+ 開始「1.10」も可</p>
+        <p class="hint">終了は開始IPの末尾を指定(例:「10」、「1.10」も可)</p>
       </fieldset>
 
       <!-- ホスト名指定 -->
@@ -75,7 +69,7 @@
         <!-- プリフィックス・開始・終了・桁数を1行に配置 -->
         <div class="row">
           <label class="wide">プリフィックス
-            <input type="text" id="hostPrefix" value="node" placeholder="node">
+            <input type="text" id="hostPrefix" value="host" placeholder="host">
           </label>
           <label>開始番号
             <input type="number" id="hostStart" value="1" min="0">

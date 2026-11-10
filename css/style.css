@@ -158,7 +158,7 @@ label {
 }
 .step:hover { border-color: var(--accent); color: var(--accent); }
 
-/* プリフィックス欄は広めに取る */
+/* プリフィックス・開始IP欄は広めに取る */
 .row label.wide { flex: 2; }
 .hint { margin: 0; font-size: 0.8rem; color: var(--muted); }
 
