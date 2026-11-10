@@ -94,6 +94,10 @@ body {
   .main { grid-template-columns: minmax(0, 1fr); }
   /* スマホでは外側の余白を詰める */
   body { padding: 8px; }
+  /* スマホではテーマ切り替えボタンをアイコンのみにする */
+  .header #themeToggle { padding: 6px; }
+  .header #themeToggle .icon { width: 18px; height: 18px; }
+  .header #themeToggle .theme-label { display: none; }
 }
 
 /* フッター(画面下端・中央寄せの小さなリンク行) */
@@ -158,8 +162,10 @@ label {
 }
 .step:hover { border-color: var(--accent); color: var(--accent); }
 
-/* プリフィックス・開始IP欄は広めに取る */
+/* プリフィックス欄は広めに取る */
 .row label.wide { flex: 2; }
+/* 開始IP欄はやや広め(プリフィックス欄より短く) */
+.row label.ip-start { flex: 1.0; }
 .hint { margin: 0; font-size: 0.8rem; color: var(--muted); }
 
 input, textarea {
