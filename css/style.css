@@ -74,7 +74,14 @@ body {
 .header h1 { margin: 0; font-size: 1.3rem; }
 /* タイトル下の説明文 */
 .subtitle { margin: 0; font-size: 0.85rem; color: var(--muted); }
-.header #themeToggle { justify-self: end; }
+/* テーマ切り替えボタンは控えめなサイズにする */
+.header #themeToggle {
+  justify-self: end;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 0.8rem;
+}
+.header #themeToggle .icon { width: 14px; height: 14px; }
 
 /* メイン領域(入力と出力を横並び) */
 .main {
