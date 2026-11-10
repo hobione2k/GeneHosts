@@ -166,14 +166,13 @@ function generate(priority) {
     throw new Error('IPアドレスがホスト件数分の範囲を超えます');
   }
 
-  // 揃えた後の終了番号の桁数と指定桁数のうち長い方で0埋めし、桁を揃える
+  // 揃えた後の終了番号
   const lastHost = hostStart + count - 1;
-  const padDigits = Math.max(digits, String(lastHost).length);
 
   // 1行ずつ「IPアドレス ホスト名」を組み立て
   const lines = [];
   for (let i = 0; i < count; i++) {
-    lines.push(`${intToIp(ipStart + i)} ${hostPrefix}${zeroPad(hostStart + i, padDigits)}`);
+    lines.push(`${intToIp(ipStart + i)} ${hostPrefix}${zeroPad(hostStart + i, digits)}`);
   }
   return {
     lines,
